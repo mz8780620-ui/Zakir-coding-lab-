@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JS Zakirhub - Coding Lab</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #1e1e1e; color: #ddd; display: flex; flex-direction: column; height: 100dvh; }
+#authScreen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e1e1e 0%, #2d2d30 100%); padding: 20px; z-index: 100; }
+.auth-box { background: #252526; padding: 32px 24px; border-radius: 16px; width: 100%; max-width: 380px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); text-align: center; }
+.auth-box h1 { margin: 0 0 8px; font-size: 26px; color: #4ec9b0; }
+.auth-box .sub { font-size: 14px; color: #888; margin-bottom: 28px; }
+.google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px; border: 0; border-radius: 8px; background: #fff; color: #333; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.google-btn:active { opacity: 0.8; }
+.google-btn img { width: 20px; height: 20px; }
+.auth-box .msg { font-size: 13px; color: #f48771; margin-top: 16px; min-height: 18px; }
+#app { display: none; flex: 1; flex-direction: column; min-height: 0; }
+#app.show { display: flex; }
+.tabs { display: flex; background: #252526; border-bottom: 1px solid #333; flex-shrink: 0; overflow-x: auto; }
+.tab { flex: 1; min-width: 70px; padding: 12px 6px; text-align: center; font-size: 12px; cursor: pointer; color: #888; border-bottom: 2px solid transparent; user-select: none; white-space: nowrap; }
+.tab.active { color: #fff; border-bottom-color: #0e639c; background: #1e1e1e; }
+.panel { flex: 1; display: none; flex-direction: column; min-height: 0; }
+.panel.active { display: flex; }
+.subtabs { display: flex; background: #2d2d30; flex-shrink: 0; }
+.subtab { flex: 1; padding: 9px 4px; text-align: center; font-size: 12px; cursor: pointer; color: #999; border-bottom: 2px solid transparent; }
+.subtab.active { color: #4ec9b0; border-bottom-color: #4ec9b0; }
+.toolbar { display: flex; gap: 6px; padding: 8px; background: #252526; border-bottom: 1px solid #333; flex-shrink: 0; align-items: center; overflow-x: auto; }
+.toolbar button { padding: 8px 12px; border: 0; border-radius: 6px; background: #0e639c; color: #fff; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.toolbar button.green { background: #16825d; }
+.toolbar button.red { background: #a1260d; }
+.toolbar button:active { opacity: 0.75; }
+.toolbar .status { font-size: 11px; color: #4ec9b0; margin-left: auto; white-space: nowrap; }
+.editor-wrap { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; }
+.editor-pane { flex: 1; min-height: 0; position: relative; display: none; }
+.editor-pane.active { display: block; }
+.CodeMirror { position: absolute; inset: 0; height: auto !important; font-size: 13px; font-family: Menlo, Consolas, monospace; }
+#previewPane { background: #fff; }
+#preview { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
+.output { flex: 0 0 40%; margin: 0; padding: 12px; background: #141414; color: #d4d4d4; font-family: Menlo, monospace; font-size: 12px; overflow: auto; white-space: pre-wrap; word-break: break-word; border-top: 1px solid #333; }
+.projects-scroll, .community-scroll { flex: 1; overflow-y: auto; padding: 12px; }
+.project-card { background: #252526; border-radius: 10px; padding: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.project-card .info { flex: 1; min-width: 150px; }
+.project-card .name { font-size: 14px; color: #fff; font-weight: 600; margin-bottom: 4px; }
+.project-card .author { font-size: 11px; color: #4ec9b0; margin-bottom: 4px; }
+.project-card .time { font-size: 11px; color: #888; }
+.project-card .actions { display: flex; gap: 6px; flex-shrink: 0; margin-top: 8px; }
+.project-card button { padding: 7px 11px; border: 0; border-radius: 6px; font-size: 12px; color: #fff; cursor: pointer; }
+.project-card .open { background: #0e639c; }
+.project-card .share { background: #9c27b0; }
+.project-card .del { background: #a1260d; }
+.empty { text-align: center; color: #666; padding: 40px 20px; font-size: 14px; }
+.chat-container { flex: 1; display: flex; flex-direction: column; background: #1e1e1e; min-height: 0; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.message { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4; }
+.message.mine { align-self: flex-end; background: #0e639c; color: #fff; border-bottom-right-radius: 2px; }
+.message.others { align-self: flex-start; background: #2d2d30; color: #ddd; border-bottom-left-radius: 2px; }
+.message .sender { font-size: 11px; color: #4ec9b0; margin-bottom: 4px; font-weight: bold; }
+.message.mine .sender { color: #a5d6ff; text-align: right; }
+.chat-input-area { display: flex; gap: 8px; padding: 12px; background: #252526; border-top: 1px solid #333; flex-shrink: 0; }
+.chat-input-area input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #1e1e1e; color: #fff; font-size: 14px; outline: none; }
+.chat-input-area button { padding: 0 20px; border-radius: 8px; border: 0; background: #16825d; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; }
+.tools-scroll { flex: 1; overflow-y: auto; padding: 12px; }
+.tool { background: #252526; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+.tool h3 { margin: 0 0 10px; font-size: 14px; color: #4ec9b0; }
+.tool textarea, .tool input { width: 100%; padding: 10px; margin-bottom: 8px; background: #1e1e1e; border: 1px solid #444; border-radius: 6px; color: #ddd; font-family: Menlo, monospace; font-size: 12px; resize: vertical; min-height: 60px; }
+.tool input { min-height: auto; }
+.tool .row { display: flex; gap: 8px; margin-bottom: 8px; }
+.tool .row button, .tool > button { flex: 1; padding: 10px; border: 0; border-radius: 6px; background: #0e639c; color: #fff; font-size: 13px; cursor: pointer; }
+.tool > button { width: 100%; margin-bottom: 8px; }
+.output-small { margin: 0; padding: 8px; background: #141414; border-radius: 6px; font-family: Menlo, monospace; font-size: 12px; overflow: auto; max-height: 150px; white-space: pre-wrap; }
+.ad-space { border: 2px dashed #0e639c; border-radius: 12px; padding: 40px 20px; text-align: center; background: rgba(14, 99, 156, 0.1); margin-bottom: 20px; }
+.ad-space h3 { color: #4ec9b0; margin: 0 0 10px; font-size: 16px; }
+.ad-space p { color: #888; font-size: 13px; margin: 0; }
+.learn-scroll { flex: 1; overflow-y: auto; padding: 12px; }
+.lesson { background: #252526; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.lesson-head { padding: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.lesson-head h3 { margin: 0; font-size: 14px; color: #4ec9b0; }
+.lesson-head .arrow { color: #888; transition: transform 0.2s; }
+.lesson.open .arrow { transform: rotate(90deg); }
+.lesson-body { display: none; padding: 0 14px 14px; }
+.lesson.open .lesson-body { display: block; }
+.lesson-body p { margin: 8px 0; font-size: 13px; line-height: 1.6; color: #ccc; }
+.lesson-body code { background: #141414; padding: 2px 6px; border-radius: 4px; color: #4ec9b0; }
+.lesson-body pre { background: #141414; padding: 12px; border-radius: 8px; font-size: 12px; overflow-x: auto; color: #d4d4d4; }
+.try-btn { background: #16825d; border: 0; color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; margin-top: 8px; }
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+.modal-bg.show { display: flex; }
+.modal { background: #252526; padding: 22px; border-radius: 12px; width: 100%; max-width: 340px; }
+.modal h3 { margin: 0 0 14px; color: #4ec9b0; }
+.modal input { width: 100%; padding: 12px; background: #1e1e1e; border: 1px solid #444; border-radius: 8px; color: #ddd; margin-bottom: 12px; }
+.modal .row { display: flex; gap: 8px; }
+.modal button { flex: 1; padding: 10px; border: 0; border-radius: 8px; font-size: 13px; cursor: pointer; color: #fff; }
+.modal .ok { background: #16825d; }
+.modal .cancel { background: #555; }
+</style>
+</head>
+<body>
+
+<div id="authScreen">
+  <div class="auth-box">
+    <h1>🧪 JS Zakirhub Lab</h1>
+    <div class="sub">কোডিং শিখুন, শেয়ার করুন ও সাইবার স্কাউট হোন</div>
+    <button class="google-btn" onclick="doGoogleLogin()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
+      Google দিয়ে লগইন করুন
+    </button>
+    <div class="msg" id="authMsg"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="tabs" id="mainTabs">
+    <div class="tab active" data-panel="web">🌐 Web</div>
+    <div class="tab" data-panel="python">🐍 Python</div>
+    <div class="tab" data-panel="community">🌍 কমিউনিটি</div>
+    <div class="tab" data-panel="chat">💬 চ্যাট</div>
+    <div class="tab" data-panel="projects">📁 প্রজেক্ট</div>
+    <div class="tab" data-panel="tools">🧰 Tools</div>
+    <div class="tab" data-panel="learn">📚 শেখা</div>
+    <div class="tab" data-panel="account">👤 আমি</div>
+  </div>
+
+  <div class="panel active" id="panel-web">
+    <div class="subtabs" id="webSubtabs">
+      <div class="subtab active" data-ed="html">HTML</div>
+      <div class="subtab" data-ed="css">CSS</div>
+      <div class="subtab" data-ed="js">JS</div>
+      <div class="subtab" data-ed="preview">👁 Preview</div>
+    </div>
+    <div class="toolbar">
+      <button onclick="runWeb()">▶ Run</button>
+      <button class="green" onclick="openSaveModal()">💾 সেভ</button>
+      <button class="red" onclick="clearWeb()">🗑 Clear</button>
+      <span class="status" id="saveStatus"></span>
+    </div>
+    <div class="editor-wrap">
+      <div id="htmlEditor" class="editor-pane active"></div>
+      <div id="cssEditor" class="editor-pane"></div>
+      <div id="jsEditor" class="editor-pane"></div>
+      <div id="previewPane" class="editor-pane">
+        <iframe id="preview" sandbox="allow-scripts allow-modals allow-forms allow-popups"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-python">
+    <div class="toolbar">
+      <button onclick="runPython()">▶ Run Python</button>
+      <button class="green" onclick="openSaveModal()">💾 সেভ</button>
+      <button class="red" onclick="clearPy()">🗑 Clear</button>
+      <span class="status" id="pyHint">প্রথমবার ~১০ সেকেন্ড</span>
+    </div>
+    <div class="editor-wrap" style="flex:3;">
+      <div id="pyEditor" class="editor-pane active"></div>
+    </div>
+    <pre id="pyOutput" class="output" style="flex:2;"></pre>
+  </div>
+
+  <div class="panel" id="panel-community">
+    <div class="toolbar">
+      <button onclick="loadCommunity()">🔄 রিফ্রেশ করুন</button>
+    </div>
+    <div class="community-scroll" id="communityList"></div>
+  </div>
+
+  <div class="panel" id="panel-chat">
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <div class="empty">মেসেজ লোড হচ্ছে...</div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="এখানে আপনার মেসেজ লিখুন..." onkeydown="if(event.key==='Enter') sendMessage()">
+        <button onclick="sendMessage()">পাঠান</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-projects">
+    <div class="toolbar">
+      <button onclick="loadProjects()">🔄 Refresh</button>
+      <button class="green" onclick="openSaveModal()">💾 নতুন সেভ</button>
+    </div>
+    <div class="projects-scroll" id="projectsList"></div>
+  </div>
+
+  <div class="panel" id="panel-tools">
+    <div class="tools-scroll">
+      <div class="tool">
+        <h3>📦 JSON Format</h3>
+        <textarea id="jsonIn" placeholder='{"a":1}'></textarea>
+        <div class="row"><button onclick="jsonFormat()">Format</button><button onclick="jsonMinify()">Minify</button></div>
+        <textarea id="jsonOut" readonly></textarea>
+      </div>
+      <div class="tool">
+        <h3>🔐 Base64</h3>
+        <textarea id="b64In"></textarea>
+        <div class="row"><button onclick="b64Enc()">Encode</button><button onclick="b64Dec()">Decode</button></div>
+        <textarea id="b64Out" readonly></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-learn">
+    <div class="learn-scroll" id="learnContent"></div>
+  </div>
+
+  <div class="panel" id="panel-account">
+    <div class="tools-scroll">
+      <div class="tool">
+        <h3>👤 আমার প্রোফাইল</h3>
+        <p style="font-size:13px;color:#ccc;">
+          নাম: <span id="accName" style="color:#4ec9b0;"></span><br>
+          ইমেইল: <span id="accEmail" style="color:#4ec9b0;"></span>
+        </p>
+      </div>
+      <div class="tool">
+        <h3>🏠 হোম পেজ</h3>
+        <a href="index.html" style="display:block; text-align:center; padding:10px; background:#0e639c; color:#fff; text-decoration:none; border-radius:6px; font-weight:bold;">প্রধান ড্যাশবোর্ডে ফিরে যান</a>
+      </div>
+      <div class="tool">
+        <h3>🚪 লগআউট</h3>
+        <button onclick="doLogout()" style="background:#a1260d; width:100%; padding:10px; border:0; border-radius:6px; color:#fff; font-weight:bold; cursor:pointer;">লগআউট করুন</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="saveModal">
+  <div class="modal">
+    <h3>💾 প্রজেক্ট সেভ</h3>
+    <input id="projName" placeholder="প্রজেক্টের নাম দিন" maxlength="40">
+    <div class="row">
+      <button class="cancel" onclick="closeSaveModal()">বাতিল</button>
+      <button class="ok" onclick="saveProject()">সেভ</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAKJzdVBBSED8JEcS9dUJMh1dekfk5be4s",
+  authDomain: "bangla-code-lab.firebaseapp.com",
+  projectId: "bangla-code-lab",
+  storageBucket: "bangla-code-lab.firebasestorage.app",
+  messagingSenderId: "542355859550",
+  appId: "1:542355859550:web:d304e461393948dcd16ccf",
+  measurementId: "G-1FDQGT628S"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUser = null;
+let chatUnsubscribe = null;
+
+function doGoogleLogin() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  document.getElementById('authMsg').textContent = 'লগইন হচ্ছে...';
+  auth.signInWithPopup(provider)
+    .then(() => { document.getElementById('authMsg').textContent = ''; })
+    .catch((error) => { 
+      if (error.code === 'auth/popup-blocked' || error.code === 'auth/operation-not-supported-in-this-environment') {
+        auth.signInWithRedirect(provider);
+      } else { document.getElementById('authMsg').textContent = 'লগইন ব্যর্থ: ' + error.message; }
+    });
+}
+auth.getRedirectResult().catch((error) => { if (error.code) document.getElementById('authMsg').textContent = 'লগইন ব্যর্থ: ' + error.message; });
+async function doLogout() { if (confirm('লগআউট করবেন?')) await auth.signOut(); }
+
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  if (user) {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('app').classList.add('show');
+    document.getElementById('accName').textContent = user.displayName || 'ইউজার';
+    document.getElementById('accEmail').textContent = user.email;
+    setTimeout(() => Object.values(editors).forEach(e => e && e.refresh()), 100);
+    loadProjects();
+    loadCommunity();
+    startChatListener();
+  } else {
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('app').classList.remove('show');
+    if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+  }
+});
+
+const defaults = {
+  html: '<!DOCTYPE html>\n<html>\n<body style="font-family:system-ui;padding:16px;background:#fafafa">\n  <h1 style="color:#0e639c">Hello, JS Zakirhub! 👋</h1>\n  <p>HTML/CSS/JS লিখে Run চাপো।</p>\n</body>\n</html>',
+  css: 'body { font-family: system-ui; padding: 16px; }\nh1 { color: #0e639c; }',
+  js: "console.log('JS ready ✅');",
+  py: '# Python 3 (Pyodide)\nfor i in range(5):\n    print("Hello", i)'
+};
+const editors = {};
+function makeEditor(id, mode, key) {
+  const ed = CodeMirror(document.getElementById(id), {
+    value: defaults[key], mode: mode, theme: 'dracula', lineNumbers: true, lineWrapping: true, autoCloseBrackets: true, indentUnit: 2, tabSize: 2
+  });
+  editors[key] = ed;
+}
+makeEditor('htmlEditor', 'htmlmixed', 'html');
+makeEditor('cssEditor', 'css', 'css');
+makeEditor('jsEditor', 'javascript', 'js');
+makeEditor('pyEditor', 'python', 'py');
+
+document.querySelectorAll('#mainTabs .tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('#mainTabs .tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + t.dataset.panel).classList.add('active');
+    setTimeout(() => Object.values(editors).forEach(e => e && e.refresh()), 60);
+    if (t.dataset.panel === 'community') loadCommunity();
+    if (t.dataset.panel === 'chat') scrollToBottom();
+  });
+});
+
+const paneIds = { html: 'htmlEditor', css: 'cssEditor', js: 'jsEditor', preview: 'previewPane' };
+document.querySelectorAll('#webSubtabs .subtab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('#webSubtabs .subtab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    Object.values(paneIds).forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById(paneIds[t.dataset.ed]).classList.add('active');
+    setTimeout(() => { editors.html.refresh(); editors.css.refresh(); editors.js.refresh(); }, 60);
+  });
+});
+function showPane(name) { const t = document.querySelector('#webSubtabs .subtab[data-ed="' + name + '"]'); if (t) t.click(); }
+
+function startChatListener() {
+  const chatBox = document.getElementById('chatMessages');
+  if (chatUnsubscribe) chatUnsubscribe();
+  chatUnsubscribe = db.collection('public_chat').orderBy('timestamp', 'asc').limitToLast(50)
+    .onSnapshot(snap => {
+      if (snap.empty) { chatBox.innerHTML = '<div class="empty">এখনো কোনো মেসেজ নেই। আপনিই প্রথম কথা বলুন!</div>'; return; }
+      chatBox.innerHTML = snap.docs.map(doc => {
+  
