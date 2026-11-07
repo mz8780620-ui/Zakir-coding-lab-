@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JS Zakirhub - Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Hind Siliguri', system-ui, sans-serif; }
+body { margin: 0; padding: 0; background: #0f0f13; color: #fff; display: flex; flex-direction: column; min-height: 100dvh; background-image: radial-gradient(circle at top right, #1a1a24, #0f0f13); }
+#authScreen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #0f0f13; z-index: 100; padding: 20px; }
+.auth-box { background: #1e1e24; padding: 40px 24px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+.auth-box h1 { margin: 0 0 10px; font-size: 32px; color: #4ec9b0; text-shadow: 0 0 15px rgba(78, 201, 176, 0.4); }
+.auth-box p { color: #888; margin-bottom: 30px; font-size: 15px; }
+.google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; border: 0; border-radius: 10px; background: #fff; color: #333; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+.google-btn:active { transform: scale(0.98); }
+.google-btn img { width: 22px; height: 22px; }
+.auth-msg { color: #f48771; margin-top: 15px; font-size: 14px; min-height: 20px; }
+#portal { display: none; flex-direction: column; min-height: 100dvh; }
+header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; background: rgba(15, 15, 19, 0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 10; }
+.logo { font-size: 22px; font-weight: 700; color: #4ec9b0; }
+.user-profile { display: flex; align-items: center; gap: 10px; }
+.user-profile img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #4ec9b0; }
+.logout-btn { background: transparent; border: 1px solid #f48771; color: #f48771; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+.container { padding: 20px; max-width: 800px; margin: 0 auto; width: 100%; flex: 1; }
+.welcome { margin-bottom: 30px; }
+.welcome h2 { margin: 0 0 5px; font-size: 24px; color: #fff; }
+.welcome p { margin: 0; color: #888; font-size: 15px; }
+.grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+@media(min-width: 600px) { .grid { grid-template-columns: 1fr 1fr; } }
+.card { background: #1e1e24; border-radius: 16px; padding: 25px; text-decoration: none; color: #fff; border: 1px solid #333; transition: 0.3s; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.card:active { transform: scale(0.98); }
+.card:hover { border-color: #4ec9b0; box-shadow: 0 10px 30px rgba(78, 201, 176, 0.1); }
+.card-icon { font-size: 40px; margin-bottom: 15px; }
+.card h3 { margin: 0 0 10px; font-size: 20px; color: #4ec9b0; }
+.card p { margin: 0; font-size: 14px; color: #aaa; line-height: 1.6; }
+.card.cyber { border-color: rgba(0, 255, 0, 0.3); }
+.card.cyber:hover { border-color: #00ff00; box-shadow: 0 10px 30px rgba(0, 255, 0, 0.1); }
+.card.cyber h3 { color: #00ff00; text-shadow: 0 0 10px rgba(0,255,0,0.3); }
+.card.tools { border-color: rgba(255, 152, 0, 0.3); }
+.card.tools:hover { border-color: #ff9800; box-shadow: 0 10px 30px rgba(255, 152, 0, 0.1); }
+.card.tools h3 { color: #ff9800; text-shadow: 0 0 10px rgba(255,152,0,0.3); }
+.sponsor-box { border: 2px dashed #444; border-radius: 16px; padding: 30px 20px; text-align: center; margin-top: 30px; background: rgba(255,255,255,0.02); }
+.sponsor-box h3 { color: #888; margin: 0 0 10px; font-size: 16px; }
+.sponsor-box p { color: #666; font-size: 13px; margin: 0; }
+footer { padding: 30px 20px; text-align: center; border-top: 1px solid #222; margin-top: auto; }
+.fb-btn { display: inline-flex; align-items: center; gap: 8px; background: #1877f2; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 30px; font-weight: 600; font-size: 14px; }
+.fb-btn svg { width: 18px; height: 18px; fill: currentColor; }
+.copyright { color: #555; font-size: 12px; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<div id="authScreen">
+  <div class="auth-box">
+    <h1>JS Zakirhub</h1>
+    <p>Learn • Code • Secure</p>
+    <button class="google-btn" onclick="doGoogleLogin()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
+      Google দিয়ে প্রবেশ করুন
+    </button>
+    <div class="auth-msg" id="authMsg"></div>
+  </div>
+</div>
+
+<div id="portal">
+  <header>
+    <div class="logo">JS Zakirhub</div>
+    <div class="user-profile">
+      <img id="userPic" src="" alt="User">
+      <button class="logout-btn" onclick="doLogout()">লগআউট</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="welcome">
+      <h2>স্বাগতম, <span id="userName" style="color:#4ec9b0;">ইউজার</span>! 👋</h2>
+      <p>আপনার পছন্দের প্ল্যাটফর্মটি বেছে নিন এবং আপনার যাত্রা শুরু করুন।</p>
+    </div>
+
+    <div class="grid">
+      <!-- Lab Card -->
+      <a href="lab.html" class="card">
+        <div class="card-icon">🧪</div>
+        <h3>কোডিং ল্যাব (Coding Lab)</h3>
+        <p>HTML, CSS, JS এবং Python শিখুন। নিজের প্রজেক্ট সেভ করুন এবং কমিউনিটিতে শেয়ার করুন।</p>
+      </a>
+
+      <!-- Cyber Card -->
+      <a href="cyber.html" class="card cyber">
+        <div class="card-icon">💻</div>
+        <h3>Cyber Scout Terminal</h3>
+        <p>সাইবার সিকিউরিটি এবং স্কাউটদের জন্য বিশেষায়িত টার্মিনাল। রিয়েল-টাইম সিকিউর চ্যাট করুন।</p>
+      </a>
+
+      <!-- New Pro Tools Card -->
+      <a href="tools.html" class="card tools">
+        <div class="card-icon">⚡</div>
+        <h3>Pro Cyber & Dev Tools</h3>
+        <p>পাসওয়ার্ড জেনারেটর, হ্যাশ জেনারেটর, কিউআর কোড এবং ডেভেলপারদের জন্য প্রিমিয়াম ইউটিলিটি টুলস।</p>
+      </a>
+    </div>
+
+    <div class="sponsor-box">
+      <h3>📢 বিজ্ঞাপনের জন্য জায়গা (Ad Space)</h3>
+      <p>আপনার ব্যবসা বা স্পন্সরশিপের জন্য এখানে ব্যানার বসানো যাবে।</p>
+    </div>
+  </div>
+
+  <footer>
+    <a href="https://www.facebook.com/jszakirhub" target="_blank" class="fb-btn">
+      <svg viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/></svg>
+      JS Zakirhub ফেসবুক পেজ
+    </a>
+    <div class="copyright">© 2024 JS Zakirhub. All rights reserved.</div>
+  </footer>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAKJzdVBBSED8JEcS9dUJMh1dekfk5be4s",
+  authDomain: "bangla-code-lab.firebaseapp.com",
+  projectId: "bangla-code-lab",
+  storageBucket: "bangla-code-lab.firebasestorage.app",
+  messagingSenderId: "542355859550",
+  appId: "1:542355859550:web:d304e461393948dcd16ccf",
+  measurementId: "G-1FDQGT628S"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+function doGoogleLogin() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  document.getElementById('authMsg').textContent = 'প্রবেশ করা হচ্ছে...';
+  auth.signInWithPopup(provider).then(() => { document.getElementById('authMsg').textContent = ''; })
+    .catch((error) => { 
+      if (error.code === 'auth/popup-blocked' || error.code === 'auth/operation-not-supported-in-this-environment') {
+        auth.signInWithRedirect(provider);
+      } else { document.getElementById('authMsg').textContent = 'লগইন ব্যর্থ: ' + error.message; }
+    });
+}
+auth.getRedirectResult().catch((error) => { if (error.code) document.getElementById('authMsg').textContent = 'লগইন ব্যর্থ: ' + error.message; });
+async function doLogout() { if (confirm('আপনি কি লগআউট করতে চান?')) { await auth.signOut(); } }
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('portal').style.display = 'flex';
+    document.getElementById('userName').textContent = user.displayName ? user.displayName.split(' ')[0] : 'ইউজার';
+    const picUrl = user.photoURL || 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/default-avatar.png';
+    document.getElementById('userPic').src = picUrl;
+  } else {
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('portal').style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
