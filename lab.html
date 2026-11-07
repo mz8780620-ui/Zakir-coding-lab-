@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JS Zakirhub - Coding Lab</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<link rel="stylesheet" href="lab.css">
+<style>
+  .lang-select { background: #1e1e24; color: #4ec9b0; border: 1px solid #4ec9b0; padding: 6px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; outline: none; margin-left: auto; }
+  .lang-select option { background: #1e1e24; color: #fff; }
+  .auth-lang { position: absolute; top: 20px; right: 20px; }
+</style>
+</head>
+<body>
+
+<div id="authScreen">
+  <select id="langSelectAuth" class="lang-select auth-lang" onchange="changeLanguage(this.value)">
+    <option value="en">🌐 EN</option>
+    <option value="bn">🌐 BN</option>
+    <option value="hi">🌐 HI</option>
+    <option value="ar">🌐 AR</option>
+    <option value="ur">🌐 UR</option>
+    <option value="es">🌐 ES</option>
+  </select>
+  <div class="auth-box">
+    <h1>🧪 JS Zakirhub Lab</h1>
+    <div class="sub" data-i18n="authSub">Learn to code, share, and become a Cyber Scout</div>
+    <button class="google-btn" onclick="doGoogleLogin()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
+      <span data-i18n="loginBtn">Login with Google</span>
+    </button>
+    <div class="msg" id="authMsg"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="tabs" id="mainTabs">
+    <select id="langSelectApp" class="lang-select" onchange="changeLanguage(this.value)" style="margin-right:10px; flex-shrink:0;">
+      <option value="en">🌐 EN</option>
+      <option value="bn">🌐 BN</option>
+      <option value="hi">🌐 HI</option>
+      <option value="ar">🌐 AR</option>
+      <option value="ur">🌐 UR</option>
+      <option value="es">🌐 ES</option>
+    </select>
+    <div class="tab active" data-panel="web"><span data-i18n="webTab">🌐 Web</span></div>
+    <div class="tab" data-panel="python"><span data-i18n="pyTab">🐍 Python</span></div>
+    <div class="tab" data-panel="community"><span data-i18n="commTab">🌍 Community</span></div>
+    <div class="tab" data-panel="chat"><span data-i18n="chatTab">💬 Chat</span></div>
+    <div class="tab" data-panel="projects"><span data-i18n="projTab">📁 Projects</span></div>
+    <div class="tab" data-panel="tools"><span data-i18n="toolsTab">🧰 Tools</span></div>
+    <div class="tab" data-panel="learn"><span data-i18n="learnTab">📚 Learn</span></div>
+    <div class="tab" data-panel="account"><span data-i18n="accTab">👤 Profile</span></div>
+  </div>
+
+  <div class="panel active" id="panel-web">
+    <div class="subtabs" id="webSubtabs">
+      <div class="subtab active" data-ed="html">HTML</div>
+      <div class="subtab" data-ed="css">CSS</div>
+      <div class="subtab" data-ed="js">JS</div>
+      <div class="subtab" data-ed="preview" data-i18n="previewTab">👁 Preview</div>
+    </div>
+    <div class="toolbar">
+      <button onclick="runWeb()" data-i18n="runBtn">▶ Run</button>
+      <button class="green" onclick="openSaveModal()" data-i18n="saveBtn">💾 Save</button>
+      <button class="red" onclick="clearWeb()" data-i18n="clearBtn">🗑 Clear</button>
+      <span class="status" id="saveStatus"></span>
+    </div>
+    <div class="editor-wrap">
+      <div id="htmlEditor" class="editor-pane active"></div>
+      <div id="cssEditor" class="editor-pane"></div>
+      <div id="jsEditor" class="editor-pane"></div>
+      <div id="previewPane" class="editor-pane">
+        <iframe id="preview" sandbox="allow-scripts allow-modals allow-forms allow-popups"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-python">
+    <div class="toolbar">
+      <button onclick="runPython()" data-i18n="runPyBtn">▶ Run Python</button>
+      <button class="green" onclick="openSaveModal()" data-i18n="saveBtn">💾 Save</button>
+      <button class="red" onclick="clearPy()" data-i18n="clearBtn">🗑 Clear</button>
+      <span class="status" id="pyHint" data-i18n="pyHint">First time ~10s</span>
+    </div>
+    <div class="editor-wrap" style="flex:3;">
+      <div id="pyEditor" class="editor-pane active"></div>
+    </div>
+    <pre id="pyOutput" class="output" style="flex:2;"></pre>
+  </div>
+
+  <div class="panel" id="panel-community">
+    <div class="toolbar">
+      <button onclick="loadCommunity()" data-i18n="refreshBtn">🔄 Refresh</button>
+    </div>
+    <div class="community-scroll" id="communityList"></div>
+  </div>
+
+  <div class="panel" id="panel-chat">
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <div class="empty" data-i18n="loading">Loading...</div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="Type message..." onkeydown="if(event.key==='Enter') sendMessage()">
+        <button onclick="sendMessage()" data-i18n="sendBtn">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-projects">
+    <div class="toolbar">
+      <button onclick="loadProjects()" data-i18n="refreshBtn">🔄 Refresh</button>
+      <button class="green" onclick="openSaveModal()" data-i18n="newSaveBtn">💾 New Save</button>
+    </div>
+    <div class="projects-scroll" id="projectsList"></div>
+  </div>
+
+  <div class="panel" id="panel-tools">
+    <div class="tools-scroll">
+      <div class="tool">
+        <h3>📦 JSON Format</h3>
+        <textarea id="jsonIn" placeholder='{"a":1}'></textarea>
+        <div class="row"><button onclick="jsonFormat()">Format</button><button onclick="jsonMinify()">Minify</button></div>
+        <textarea id="jsonOut" readonly></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-learn">
+    <div class="learn-scroll" id="learnContent"></div>
+  </div>
+
+  <div class="panel" id="panel-account">
+    <div class="tools-scroll">
+      <div class="tool">
+        <h3 data-i18n="profileTitle">👤 My Profile</h3>
+        <p style="font-size:13px;color:#ccc;">
+          <span data-i18n="nameLabel">Name</span>: <span id="accName" style="color:#4ec9b0;"></span><br>
+          <span data-i18n="emailLabel">Email</span>: <span id="accEmail" style="color:#4ec9b0;"></span>
+        </p>
+      </div>
+      <div class="tool">
+        <h3 data-i18n="homeTitle">🏠 Home Page</h3>
+        <a href="index.html" style="display:block; text-align:center; padding:10px; background:#0e639c; color:#fff; text-decoration:none; border-radius:6px; font-weight:bold;" data-i18n="returnHome">Return to Main</a>
+      </div>
+      <div class="tool">
+        <h3 data-i18n="logoutTitle">🚪 Logout</h3>
+        <button onclick="doLogout()" style="background:#a1260d; width:100%; padding:10px; border:0; border-radius:6px; color:#fff; font-weight:bold; cursor:pointer;" data-i18n="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="saveModal">
+  <div class="modal">
+    <h3 data-i18n="saveModalTitle">💾 Save Project</h3>
+    <input id="projName" placeholder="Enter name" maxlength="40">
+    <div class="row">
+      <button class="cancel" onclick="closeSaveModal()" data-i18n="cancelBtn">Cancel</button>
+      <button class="ok" onclick="saveProject()" data-i18n="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="lab.js"></script>
+</body>
+</html>
