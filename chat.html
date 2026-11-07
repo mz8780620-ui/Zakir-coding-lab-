@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JS Zakirhub - Messenger</title>
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, sans-serif; }
+html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0f0f13; color: #fff; display: flex; flex-direction: column; height: 100dvh; }
+.header { background: #1e1e24; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+.header h1 { margin: 0; font-size: 18px; color: #2196f3; }
+.header a { color: #fff; text-decoration: none; font-weight: bold; border: 1px solid #2196f3; padding: 5px 10px; border-radius: 5px; font-size: 12px; }
+
+#authScreen { position: fixed; inset: 0; background: #0f0f13; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; padding: 20px; text-align: center; }
+.chat-btn { background: transparent; border: 1px solid #2196f3; color: #2196f3; padding: 12px 24px; font-size: 16px; cursor: pointer; margin-top: 20px; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+.chat-btn:hover { background: #2196f3; color: #fff; }
+
+#app { display: none; flex-direction: column; height: 100%; background: #0f0f13; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+.message { max-width: 80%; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.4; position: relative; }
+.message.mine { align-self: flex-end; background: #2196f3; color: #fff; border-bottom-right-radius: 4px; }
+.message.others { align-self: flex-start; background: #1e1e24; color: #eee; border-bottom-left-radius: 4px; border: 1px solid #333; }
+.message .sender { font-size: 12px; color: #aaa; margin-bottom: 5px; font-weight: bold; }
+.message.mine .sender { color: #bbdefb; text-align: right; }
+.message .time { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 5px; text-align: right; }
+.message.others .time { text-align: left; }
+
+.chat-input-area { display: flex; gap: 10px; padding: 15px; background: #1e1e24; border-top: 1px solid #333; flex-shrink: 0; }
+.chat-input-area input { flex: 1; padding: 14px; border-radius: 24px; border: 1px solid #444; background: #0f0f13; color: #fff; font-size: 15px; outline: none; }
+.chat-input-area button { padding: 0 20px; border-radius: 24px; border: 0; background: #2196f3; color: #fff; font-size: 15px; font-weight: bold; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div id="authScreen">
+  <h2 style="color:#2196f3;">[ JS Zakirhub Messenger ]</h2>
+  <p style="color:#888;">Connect with the community</p>
+  <button class="chat-btn" onclick="doGoogleLogin()">LOGIN WITH GOOGLE</button>
+  <div class="msg" id="authMsg" style="color: #f48771; margin-top: 15px;"></div>
+</div>
+
+<div id="app">
+  <div class="header">
+    <h1>💬 Community Messenger</h1>
+    <a href="index.html">⬅ Home</a>
+  </div>
+  
+  <div class="chat-messages" id="chatMessages"></div>
+
+  <div class="chat-input-area">
+    <input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMessage()">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAKJzdVBBSED8JEcS9dUJMh1dekfk5be4s", authDomain: "bangla-code-lab.firebaseapp.com",
+  projectId: "bangla-code-lab", storageBucket: "bangla-code-lab.firebasestorage.app",
+  messagingSenderId: "542355859550", appId: "1:542355859550:web:d304e461393948dcd16ccf", measurementId: "G-1FDQGT628S"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let currentUser = null, chatUnsubscribe = null;
+
+function doGoogleLogin() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch((error) => { 
+    if (error.code === 'auth/popup-blocked') { auth.signInWithRedirect(provider); } 
+    else { document.getElementById('authMsg').textContent = 'Error: ' + error.message; }
+  });
+}
+
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  if (user) {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    startChatListener();
+  } else {
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+  }
+});
+
+function startChatListener() {
+  const chatBox = document.getElementById('chatMessages');
+  if (chatUnsubscribe) chatUnsubscribe();
+  
+  // এখানে 'public_chat' কালেকশন ব্যবহার করা হয়েছে, যা ল্যাবের চ্যাটের সাথে কানেক্টেড
+  chatUnsubscribe = db.collection('public_chat').orderBy('timestamp', 'asc').limitToLast(100).onSnapshot(snap => {
+    if (snap.empty) {
+      chatBox.innerHTML = '<div style="text-align:center;color:#666;margin-top:20px;">No messages yet. Say hello!</div>';
+      return;
+    }
+    chatBox.innerHTML = snap.docs.map(doc => {
+      const d = doc.data(); 
+      const isMine = d.senderId === currentUser.uid;
+      const time = d.timestamp ? d.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+      
+      return `<div class="message ${isMine ? 'mine' : 'others'}">
+        ${!isMine ? `<div class="sender">${escapeHtml(d.senderName)}</div>` : ''}
+        ${escapeHtml(d.text)}
+        <div class="time">${time}</div>
+      </div>`;
+    }).join('');
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput'); 
+  const text = input.value.trim();
+  if (!text || !currentUser) return; 
+  input.value = ''; 
+  try {
+    await db.collection('public_chat').add({ 
+      text: text, 
+      senderName: currentUser.displayName || 'Anonymous', 
+      senderId: currentUser.uid, 
+      timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+    });
+  } catch (e) { alert(e.message); }
+}
+
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+</body>
+</html>
