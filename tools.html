@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JS Zakirhub - Pro Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Hind Siliguri', system-ui, sans-serif; }
+body { margin: 0; padding: 0; background: #0f0f13; color: #fff; display: flex; flex-direction: column; min-height: 100dvh; }
+header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; background: #1a1a24; position: sticky; top: 0; z-index: 10; }
+.logo { font-size: 20px; font-weight: 700; color: #ff9800; }
+.back-btn { color: #fff; text-decoration: none; background: #333; padding: 6px 12px; border-radius: 6px; font-size: 13px; }
+.container { padding: 20px; max-width: 800px; margin: 0 auto; width: 100%; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+.tool-card { background: #1e1e24; border-radius: 16px; padding: 20px; border: 1px solid #333; }
+.tool-card h3 { margin: 0 0 15px; font-size: 18px; color: #ff9800; display: flex; align-items: center; gap: 8px; }
+.input-group { display: flex; flex-direction: column; gap: 10px; }
+input, textarea, select { width: 100%; padding: 12px; background: #0f0f13; border: 1px solid #444; border-radius: 8px; color: #fff; font-size: 14px; outline: none; font-family: monospace; }
+button { padding: 12px; border: 0; border-radius: 8px; background: #ff9800; color: #000; font-weight: 700; font-size: 15px; cursor: pointer; transition: 0.2s; }
+button:active { transform: scale(0.98); opacity: 0.8; }
+button.blue { background: #0e639c; color: #fff; }
+.output-box { margin-top: 10px; padding: 12px; background: #000; border: 1px solid #333; border-radius: 8px; font-family: monospace; font-size: 13px; color: #4ec9b0; word-break: break-all; min-height: 45px; display: flex; align-items: center; }
+.info-text { font-size: 13px; color: #888; line-height: 1.5; margin-bottom: 10px; }
+.row { display: flex; gap: 10px; }
+.row > * { flex: 1; }
+img.qr { display: block; margin: 10px auto; max-width: 150px; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚡ Pro Tools</div>
+  <a href="index.html" class="back-btn">⬅ হোম পেজ</a>
+</header>
+
+<div class="container">
+  
+  <!-- Password Generator -->
+  <div class="tool-card">
+    <h3>🔐 Strong Password Generator</h3>
+    <p class="info-text">হ্যাকিং-প্রুফ শক্তিশালী পাসওয়ার্ড তৈরি করুন।</p>
+    <div class="row" style="margin-bottom: 10px;">
+      <input type="number" id="passLength" value="16" min="8" max="50" placeholder="Length">
+      <button onclick="generatePassword()">Generate</button>
+    </div>
+    <div class="output-box" id="passOutput">এখানে পাসওয়ার্ড আসবে...</div>
+  </div>
+
+  <!-- Hash Generator -->
+  <div class="tool-card">
+    <h3>🛡️ Hash Generator (MD5 & SHA-256)</h3>
+    <p class="info-text">ডেটা এনক্রিপ্ট বা ভেরিফাই করতে হ্যাশ জেনারেট করুন।</p>
+    <input type="text" id="hashInput" placeholder="Type text here..." oninput="generateHash()">
+    <div style="margin-top: 10px;">
+      <div style="font-size: 12px; color: #888;">SHA-256:</div>
+      <div class="output-box" id="sha256Output" style="font-size: 11px;">...</div>
+    </div>
+  </div>
+
+  <!-- QR Code Generator -->
+  <div class="tool-card">
+    <h3>📱 QR Code Generator</h3>
+    <p class="info-text">যেকোনো টেক্সট বা লিংকের QR কোড তৈরি করুন।</p>
+    <input type="text" id="qrInput" placeholder="Type URL or Text..." oninput="generateQR()">
+    <div id="qrResult" style="text-align: center;"></div>
+  </div>
+
+  <!-- Base64 & URL Encoder -->
+  <div class="tool-card">
+    <h3>🧬 Base64 & URL Encoder/Decoder</h3>
+    <input type="text" id="b64Input" placeholder="Text to encode/decode...">
+    <div class="row" style="margin-top: 10px;">
+      <button class="blue" onclick="b64Encode()">Base64 Encode</button>
+      <button class="blue" onclick="b64Decode()">Base64 Decode</button>
+    </div>
+    <div class="output-box" id="b64Output" style="margin-top: 10px;">...</div>
+  </div>
+
+  <!-- Cyber Info -->
+  <div class="tool-card">
+    <h3>🕵️ Device Info (Cyber View)</h3>
+    <p class="info-text">আপনার ব্রাউজারের সিকিউরিটি ও ডিভাইস ইনফরমেশন দেখুন।</p>
+    <button class="blue" onclick="getDeviceInfo()">Check Info</button>
+    <div class="output-box" id="deviceOutput" style="white-space: pre-wrap; font-size: 12px;">Click the button...</div>
+  </div>
+
+</div>
+
+<!-- লাইব্রেরি (হ্যাশ ও কিউআর জেনারেট করার জন্য) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+<script>
+/* ১. পাসওয়ার্ড জেনারেটর */
+function generatePassword() {
+  const len = document.getElementById('passLength').value;
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+  let pass = "";
+  for (let i = 0; i < len; i++) {
+    pass += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  document.getElementById('passOutput').innerText = pass;
+}
+
+/* ২. হ্যাশ জেনারেটর */
+function generateHash() {
+  const text = document.getElementById('hashInput').value;
+  if (!text) {
+    document.getElementById('sha256Output').innerText = "...";
+    return;
+  }
+  const hash = CryptoJS.SHA256(text).toString(CryptoJS.enc.Hex);
+  document.getElementById('sha256Output').innerText = hash;
+}
+
+/* ৩. কিউআর কোড জেনারেটর */
+function generateQR() {
+  const text = document.getElementById('qrInput').value;
+  const qrDiv = document.getElementById('qrResult');
+  if (!text) {
+    qrDiv.innerHTML = "";
+    return;
+  }
+  const url = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(text);
+  qrDiv.innerHTML = `<img src="${url}" class="qr" alt="QR Code">`;
+}
+
+/* ৪. বেস৬৪ এনকোড/ডিকোড */
+function b64Encode() {
+  const text = document.getElementById('b64Input').value;
+  try {
+    document.getElementById('b64Output').innerText = btoa(unescape(encodeURIComponent(text)));
+  } catch(e) { document.getElementById('b64Output').innerText = "Error: " + e.message; }
+}
+function b64Decode() {
+  const text = document.getElementById('b64Input').value;
+  try {
+    document.getElementById('b64Output').innerText = decodeURIComponent(escape(atob(text)));
+  } catch(e) { document.getElementById('b64Output').innerText = "Invalid Base64 String"; }
+}
+
+/* ৫. ডিভাইস ইনফো */
+function getDeviceInfo() {
+  const out = document.getElementById('deviceOutput');
+  const ua = navigator.userAgent;
+  let browser = "Unknown";
+  if(ua.indexOf("Chrome") > -1) browser = "Google Chrome";
+  else if(ua.indexOf("Safari") > -1) browser = "Safari";
+  else if(ua.indexOf("Firefox") > -1) browser = "Firefox";
+  
+  const isSecure = window.location.protocol === 'https:' ? "✅ Secure (HTTPS)" : "⚠️ Not Secure (HTTP)";
+  
+  out.innerText = 
+    "OS: " + navigator.platform + 
+    "\nBrowser: " + browser + 
+    "\nScreen: " + window.screen.width + "x" + window.screen.height + 
+    "\nLanguage: " + navigator.language + 
+    "\nSecurity: " + isSecure +
+    "\nConnection: " + (navigator.onLine ? "Online" : "Offline");
+}
+</script>
+</body>
+</html>
