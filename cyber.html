@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JS Zakirhub - Cyber Terminal</title>
+<link rel="stylesheet" href="cyber.css">
+<style>
+  .lang-select { background: #111; color: #00ff00; border: 1px solid #00ff00; padding: 6px 10px; border-radius: 5px; font-size: 13px; font-weight: bold; cursor: pointer; outline: none; margin-right: 10px; }
+  .lang-select option { background: #000; color: #00ff00; }
+  .mission-bar { display: flex; gap: 8px; padding: 10px; background: #111; border-top: 1px solid #333; overflow-x: auto; flex-shrink: 0; }
+  .cyber-btn-small { background: transparent; border: 1px solid #00ff00; color: #00ff00; padding: 6px 12px; font-size: 12px; cursor: pointer; border-radius: 4px; white-space: nowrap; font-family: inherit; transition: 0.2s; }
+  .cyber-btn-small:hover { background: #00ff00; color: #000; }
+</style>
+</head>
+<body>
+
+<div id="authScreen">
+  <h2>[ CYBER SCOUT TERMINAL ]</h2>
+  <p style="color:#888;" data-i18n="authText">Authorized Personnel Only</p>
+  <button class="cyber-btn" onclick="doGoogleLogin()" data-i18n="loginBtn">LOGIN WITH GOOGLE</button>
+  <div class="msg" id="authMsg" style="color: #f48771; margin-top: 15px;"></div>
+</div>
+
+<div id="app">
+  <div class="header">
+    <h1>_CYBER_SCOUT_</h1>
+    <div>
+      <select id="langSelect" class="lang-select" onchange="changeLanguage(this.value)">
+        <option value="en">🌐 EN</option>
+        <option value="bn">🌐 BN</option>
+        <option value="hi">🌐 HI</option>
+        <option value="ar">🌐 AR</option>
+        <option value="ur">🌐 UR</option>
+        <option value="es">🌐 ES</option>
+      </select>
+      <a href="index.html" data-i18n="homeBtn">⬅ Home Page</a>
+    </div>
+  </div>
+  
+  <div class="terminal-window" id="chatMessages"></div>
+
+  <div class="mission-bar">
+    <button class="cyber-btn-small" onclick="startMission(1)">🎯 Mission 1</button>
+    <button class="cyber-btn-small" onclick="startMission(2)">🎯 Mission 2</button>
+    <button class="cyber-btn-small" onclick="addSystemMessage('Available Commands: <br>1. <b>whoami</b> - Show your ID<br>2. <b>scan</b> - Scan network<br>3. <b>clear</b> - Clear screen<br>4. <b>help</b> - Show this menu')">❓ Help</button>
+  </div>
+
+  <div class="input-area">
+    <span>root@scout:~#</span>
+    <input type="text" id="chatInput" placeholder="Type command..." onkeydown="if(event.key==='Enter') sendMessage()">
+    <button onclick="sendMessage()" data-i18n="sendBtn">SEND</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="cyber.js"></script>
+</body>
+</html>
